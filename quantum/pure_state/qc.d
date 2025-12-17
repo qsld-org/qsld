@@ -20,6 +20,8 @@ import std.format;
 import std.random;
 import std.typecons;
 import std.range;
+import std.array;
+import std.file;
 
 // linear algebra modules
 import linalg.matrix;
@@ -1331,12 +1333,23 @@ struct QuantumCircuit {
     *
     * filename = The name of the file to write the latex to and to compile (default: circuit.tex)
     */
-    void draw(string compiler = "pdflatex", string filename = "circuit.tex") {
+    void draw(string compiler = "pdflatex", string filename = "circuit.tex", bool remove_pdf_file = true) {
         this.vis = Visualization(this.visualization_arr, this.num_qubits, this
                 .initial_state_idx);
 
         this.vis.parse_and_write_vis_arr(filename);
         this.vis.compile_tex_and_cleanup(compiler, filename);
+
+        string[] filename_split = filename.split(".");
+        string filename_prefix = filename_split[0];
+        this.vis.convert_pdf_to_png(filename_prefix, filename_prefix);
+
+        if (remove_pdf_file) {
+            string pdf_fname = filename_prefix ~ ".pdf";
+            if (exists(pdf_fname)) {
+                remove(pdf_fname);
+            }
+        }
     }
 
     // Approximate the relative phase given as a 
