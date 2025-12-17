@@ -219,7 +219,8 @@ struct Visualization {
     * filename = The name of the file to compile ending with an extension .tex
     */
     void compile_tex_and_cleanup(string compiler, string filename) {
-        auto tex_compilation_pid = spawnShell(format("%s %s > /dev/null 2&>1", compiler, filename));
+        auto output_file = File("/dev/null", "w");
+        auto tex_compilation_pid = spawnProcess([compiler, filename], std.stdio.stdin, output_file, output_file);
 
         if (wait(tex_compilation_pid) != 0) {
             writeln("The compilation of the the latex file with name ", filename, " failed");
