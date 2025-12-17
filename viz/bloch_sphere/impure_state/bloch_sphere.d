@@ -2,6 +2,7 @@ module viz.bloch_sphere.impure_state.bloch_sphere;
 
 import std.complex;
 import std.format;
+import std.array;
 import std.file;
 
 import std.typecons : Tuple;
@@ -34,7 +35,7 @@ struct BlochSphere {
         return rho_prime;
     }
 
-    void draw_bloch_sphere(int qubit_idx, string compiler = "pdflatex") {
+    void draw_bloch_sphere(int qubit_idx, string compiler = "pdflatex", bool remove_pdf_file = true) {
         Matrix!(Complex!real) rho_reduced = get_qubit_rho(qubit_idx);
         normalize_rho(rho_reduced);
 
@@ -75,5 +76,16 @@ struct BlochSphere {
         append(filename, formatted_content);
 
         compile_tex_and_cleanup(compiler, filename);
+
+        string[] filename_split = filename.split(".");
+        string filename_prefix = filename_split[0];
+        convert_pdf_to_png(filename_prefix, filename_prefix);
+
+        string pdf_fname = filename_prefix ~ ".pdf";
+        if (remove_pdf_file) {
+            if (exists(pdf_fname)) {
+                remove(pdf_fname);
+            }
+        }
     }
 }

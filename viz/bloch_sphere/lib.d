@@ -77,7 +77,8 @@ package Tuple!(real, real) get_bloch_vector_angles(Matrix!(Complex!real) rho) {
 }
 
 package void compile_tex_and_cleanup(string compiler, string filename) {
-    auto tex_compilation_pid = spawnProcess([compiler, filename]);
+    auto output_file = File("/dev/null", "w");
+    auto tex_compilation_pid = spawnProcess([compiler, filename], std.stdio.stdin, output_file, output_file);
     if (wait(tex_compilation_pid) != 0) {
         writeln("The compilation of the the latex file with name ", filename, " failed");
         exit(1);
@@ -89,4 +90,24 @@ package void compile_tex_and_cleanup(string compiler, string filename) {
     remove(filename);
     remove(format("./%s.aux", filename_no_ext));
     remove(format("./%s.log", filename_no_ext));
+}
+
+package void convert_pdf_to_png(string input_filename, string output_filename) {
+    assert(input_filename != "", "The filename of the pdf file to convert to png must be specified");
+    assert(output_filename != "", "The filename of the converted file from pdf must be specified");
+
+    input_filename ~= ".pdf";
+    output_filename ~= ".png";
+
+    string[] command = [
+        "magick", "-density", "300", input_filename, "-background", "white",
+        "-alpha", "remove", "-alpha", "off", "-resize", "1600x",
+        output_filename
+    ];
+
+    auto pdf_conv_pid = spawnProcess(command);
+    if (wait(pdf_conv_pid) != 0) {
+        writeln("The conversion of the pdf file with name: ", input_filename, " to png failed");
+        exit(1);
+    }
 }
