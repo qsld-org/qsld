@@ -89,4 +89,10 @@ struct BlochSphere {
             }
         }
     }
+
+    void draw_bloch_sphere(int[] qubit_idxs, string compiler = "pdflatex", bool remove_pdf_file = true) {
+        for (int i = 0; i < qubit_idxs.length; i++) {
+            draw_bloch_sphere(i, compiler, remove_pdf_file);
+        }
+    }
 }

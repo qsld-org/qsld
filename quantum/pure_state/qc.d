@@ -36,6 +36,7 @@ import qec.stabilizer;
 
 // visualization related modules
 import viz.visualization;
+import viz.bloch_sphere.pure_state.bloch_sphere;
 
 struct QuantumCircuit {
     // These are for the circuit itself
@@ -1385,6 +1386,30 @@ struct QuantumCircuit {
                 remove(pdf_fname);
             }
         }
+    }
+
+    /**
+    * Draws the bloch sphere visualization of the qubit index
+    * specified.
+    *
+    * params:
+    * qubit_idx = The qubit index to draw the bloch sphere of
+    */
+    void draw_bloch_sphere(int qubit_idx) {
+        BlochSphere bs = BlochSphere(&this);
+        bs.draw_bloch_sphere(qubit_idx);
+    }
+
+    /**
+    * An overload of the draw_bloch_sphere function that draws
+    * the bloch sphere for mutliple qubits
+    *
+    * params:
+    * qubit_idxs = The array of qubit indexes to draw
+    */
+    void draw_bloch_sphere(int[] qubit_idxs) {
+        BlochSphere bs = BlochSphere(&this);
+        bs.draw_bloch_sphere(qubit_idxs);
     }
 
     // Approximate the relative phase given as a 

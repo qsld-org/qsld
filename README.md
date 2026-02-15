@@ -163,16 +163,13 @@ In order to draw the bloch sphere of a given qubit you can do:
 
 ```d
     import quantum.pure_state.qc;
-    import viz.bloch_sphere.pure_state.bloch_sphere;
 
     void main() {
         QuantumCircuit qc = QuantumCircuit(1);
         qc.hadamard(0);
         qc.s(0);
         qc.pauli_z(0);
-
-        BlochSphere bs = BlochSphere(&qc);
-        bs.draw_bloch_sphere(0);
+        qc.draw_bloch_sphere(0);
     }
 ```
 
