@@ -104,7 +104,6 @@ to install the blochsphere package. See instructions below on how to test if the
 - `gate noise`
 - `decoherence (T1/T2 decay)`
 - `algorithm implementations (Deutsch-Jozsa, BBB84, Quantum Teleportation, Grovers, Shors)`
-- `quantum machine learning`
 - `circuit visualizations`
 - `bloch sphere visualization`
 - `custom unitaries`
