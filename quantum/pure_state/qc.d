@@ -780,10 +780,8 @@ struct QuantumCircuit {
         }
 
         for (int i = 0; i < this.state.length(); i++) {
-            bool cntl_qubit_is_one = (
-                i & (1 << control_qubit_idx)) != 0;
-            bool tgt_qubit_is_one = (
-                i & (1 << target_qubit_idx)) != 0;
+            bool cntl_qubit_is_one = (i & (1 << control_qubit_idx)) != 0;
+            bool tgt_qubit_is_one = (i & (1 << target_qubit_idx)) != 0;
             if (cntl_qubit_is_one && tgt_qubit_is_one) {
                 this.state[i] = this.state[i] * Complex!real(-1, 0);
             }
@@ -944,7 +942,8 @@ struct QuantumCircuit {
         Complex!real s = Complex!real(0, -1) * Complex!real(sin(theta / 2), 0);
         Vector!(Complex!real) psi = Vector!(Complex!real)(
             cast(int) this.state.length(), new Complex!real[this
-                .state.length()]); // The .init value of psi without this loop will be nan+nani for all elements
+                .state.length()]);
+        // The .init value of psi without this loop will be nan+nani for all elements
         for (int i = 0; i < psi.length(); i++) {
             psi[i] = Complex!real(0, 0);
         }
@@ -1162,17 +1161,42 @@ struct QuantumCircuit {
         return result;
     }
 
-    // measurement of a single qubit internal logic, this function
+    // Collapse the state for single qubit measurement
+    private void collapse(int qubit_idx, float outcome_prob, int result) {
+        for (int i = 0; i < this.state.length(); i++) {
+            if (((i >> qubit_idx) & 1) != result) {
+                this.state.elems[i] = Complex!real(0, 0);
+            } else {
+                this.state.elems[i] = this.state.elems[i] * (1 / sqrt(outcome_prob));
+            }
+        }
+    }
+
+    // Collapse the state for all qubit measurement
+    private void collapse_all(float outcome_prob, string result) {
+        for (int i = 0; i < this.state.length(); i++) {
+            string bit_str = format("%0*b", this.num_qubits, i);
+            if (bit_str != result) {
+                this.state.elems[i] = Complex!real(0, 0);
+            }
+        }
+
+        for (int i = 0; i < this.state.length(); i++) {
+            this.state.elems[i] = this.state.elems[i] * (1 / sqrt(outcome_prob));
+        }
+    }
+
+    // Measurement of a single qubit internal logic, this function
     // exists solely to prevent code duplication
-    private string measure_internal(int qubit_idx) {
+    private string measure_internal(int qubit_idx, bool do_collapse) {
         real probability_0 = 0;
         real probability_1 = 0;
 
         // sum probabilities of the qubit in each state
         for (int i = 0; i < this.state.length(); i++) {
             bool qubit_is_zero = (i & (1 << qubit_idx)) == 0;
-            bool qubit_is_one = (i & (1 << qubit_idx)) != 0;
-
+            bool qubit_is_one = (
+                i & (1 << qubit_idx)) != 0;
             if (qubit_is_zero) {
                 real state_prob = norm(this.state[i]);
                 probability_0 += state_prob;
@@ -1185,13 +1209,20 @@ struct QuantumCircuit {
         // get a random number over a uniform distribution
         auto rng = Random(unpredictableSeed);
         auto r = uniform(0.0, 1.0f, rng);
-
         int result; // determine measurement result
         if (r < probability_0) {
             result = 0;
+
+            if (do_collapse) {
+                collapse(qubit_idx, probability_0, result);
+            }
         } else if (
             r >= probability_0) {
             result = 1;
+
+            if (do_collapse) {
+                collapse(qubit_idx, probability_1, result);
+            }
         }
 
         return format("%d", result);
@@ -1203,14 +1234,19 @@ struct QuantumCircuit {
     * params:
     * qubit_idx = The index of the qubit to measure
     *
+    * collapse = A boolean specifying whether or not to collapse the state
+    *
+    * visualize = A boolean specifying whether or not to include measurement
+    *             in the circuit diagram
+    *
     * returns: A string representing the measured state of the qubit
     */
-    string measure(int qubit_idx, bool visualize = true) {
+    string measure(int qubit_idx, bool collapse = false, bool visualize = true) {
         if (visualize) {
             update_visualization_arr("M", [qubit_idx]);
         }
 
-        string result = measure_internal(qubit_idx);
+        string result = measure_internal(qubit_idx, collapse);
         return result;
     }
 
@@ -1223,6 +1259,9 @@ struct QuantumCircuit {
     * 
     * shots = The amount of times to measure the qubit
     *
+    * visualize = A boolean speicifying whether or not to include measurement in
+    *             the circuit diagram
+    *
     * returns: A string to int map, representing the state 
     *          measured and the amount of times it was measured
     */
@@ -1231,22 +1270,25 @@ struct QuantumCircuit {
             "using this overload of the measure function requires shots to be greater than or equal to 2, it is recommended to use over a 1000");
 
         if (visualize) {
-            update_visualization_arr("M", [qubit_idx]);
+            update_visualization_arr("M", [
+                    qubit_idx
+                ]);
         }
 
         int[string] counts;
         for (int i = 0; i < shots; i++) {
-            string result = measure_internal(qubit_idx);
+            string result = measure_internal(qubit_idx, false);
             counts[result] += 1;
         }
         return counts;
     }
 
-    // measurement for the entire system internal logic, this function exists solely 
+    // Measurement for the entire system internal logic, this function exists solely 
     // to prevent code duplication
-    private string measure_all_internal() {
+    private string measure_all_internal(bool do_collapse) {
         Vector!float probs = Vector!float(
-            cast(int) this.state.length(), new float[this.state.length()]); // Take the magnitude of each complex probability amplitude
+            cast(int) this.state.length(), new float[this.state.length()]);
+        // Take the magnitude of each complex probability amplitude
         foreach (i, c; this.state.elems) {
             float magnitude = sqrt(pow(c.re, 2) + pow(c.im, 2));
             float prob = pow(magnitude, 2);
@@ -1263,9 +1305,13 @@ struct QuantumCircuit {
             sum += elem;
             if (r < sum) {
                 binary_result = format("%0*b", this.num_qubits, i);
+                if (do_collapse) {
+                    collapse_all(elem, binary_result);
+                }
                 break;
             }
         }
+
         return binary_result;
     }
 
@@ -1273,14 +1319,20 @@ struct QuantumCircuit {
     * Collapses the possible superposition of basis states into one classical state 
     * based on inverse transform sampling (https://en.wikipedia.org/wiki/Inverse_transform_sampling)
     *
+    * params:
+    * collapse = A boolean specififying whether or not to collapse the state
+    *
+    * visualize = A boolean speicifying whether or not to include measurement in
+    *             the circuit diagram
+    *
     * returns: the bitstring of the state which was measured probabilistically
     */
-    string measure_all(bool visualize = true) {
+    string measure_all(bool collapse = false, bool visualize = true) {
         if (visualize) {
             update_visualization_arr("MA", iota(0, this.num_qubits).array);
         }
 
-        string binary_result = measure_all_internal();
+        string binary_result = measure_all_internal(collapse);
         return binary_result;
     }
 
@@ -1290,6 +1342,9 @@ struct QuantumCircuit {
     *
     * params:
     * shots = number of times measurement should be preformed
+    *
+    * visualize = A boolean specifying whether or not to include mesurement
+    *             in the circuit diagram
     *
     * returns: An associative array of bitstring to amount of times it was measured
     */
@@ -1303,7 +1358,7 @@ struct QuantumCircuit {
 
         int[string] counts;
         for (int i = 0; i < shots; i++) {
-            string binary_result = measure_all_internal();
+            string binary_result = measure_all_internal(false);
             counts[binary_result] += 1;
         }
         return counts;
@@ -1323,7 +1378,8 @@ struct QuantumCircuit {
      *           the \slice command specifically
      */
     void slice(string label, string options = "style=black") {
-        update_visualization_arr(format("slice[%s]{%s}", options, label), []);
+        update_visualization_arr(format("slice[%s]{%s}", options, label), [
+            ]);
     }
 
     /**
@@ -1340,10 +1396,8 @@ struct QuantumCircuit {
     void draw(string compiler = "pdflatex", string filename = "circuit.tex", bool remove_pdf_file = true) {
         this.vis = Visualization(this.visualization_arr, this.num_qubits, this
                 .initial_state_idx);
-
         this.vis.parse_and_write_vis_arr(filename);
         this.vis.compile_tex_and_cleanup(compiler, filename);
-
         string[] filename_split = filename.split(".");
         string filename_prefix = filename_split[0];
         this.vis.convert_pdf_to_png(filename_prefix, filename_prefix);
@@ -1371,7 +1425,6 @@ struct QuantumCircuit {
     void draw(string filename, bool remove_pdf_file = true) {
         this.vis = Visualization(this.visualization_arr, this.num_qubits, this
                 .initial_state_idx);
-
         string compiler = "pdflatex";
         this.vis.parse_and_write_vis_arr(filename);
         this.vis.compile_tex_and_cleanup(compiler, filename);
@@ -1417,33 +1470,27 @@ struct QuantumCircuit {
     private string find_phase_frac(float q) {
         real n = 0;
         real d = 1;
-
         real[] frac_coeff_list;
-        frac_coeff_list ~= floor(q);
+        frac_coeff_list ~= floor(
+            q);
 
         real[] numerator_list = [
             1,
             frac_coeff_list[0]
         ];
         real[] denominator_list = [
-            0, 1
+            0,
+            1
         ];
         real denominator_max = 128;
         real tolerance = 1e-12;
-
         int iteration = 2;
         while (true) {
-            real frac_part = q - floor(
-                q);
-
-            if (
-                abs(frac_part) < tolerance)
+            real frac_part = q - floor(q);
+            if (abs(frac_part) < tolerance)
                 break;
-
             real r = 1.0 / frac_part;
-            frac_coeff_list ~= floor(
-                r);
-
+            frac_coeff_list ~= floor(r);
             real numerator = frac_coeff_list[iteration - 1] * numerator_list[iteration - 1] + numerator_list[iteration - 2];
             real denominator = frac_coeff_list[iteration - 1] * denominator_list[iteration - 1] + denominator_list[iteration - 2];
             numerator_list ~= numerator;
@@ -1465,7 +1512,6 @@ struct QuantumCircuit {
 
         if (ni == 0)
             return "0";
-
         if (di == 1)
             return format("%d * Pi", ni);
 
@@ -1483,11 +1529,9 @@ struct QuantumCircuit {
             if (amplitude.re == 0 && amplitude.im == 0) {
                 rel_phases ~= "0";
             } else {
-                float theta = atan2(amplitude.im, amplitude
-                        .re);
+                float theta = atan2(amplitude.im, amplitude.re);
                 float q = theta / PI;
-                string rel_phase = find_phase_frac(
-                    q);
+                string rel_phase = find_phase_frac(q);
                 rel_phases ~= rel_phase;
             }
         }
