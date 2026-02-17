@@ -106,6 +106,7 @@ to install the blochsphere package. See instructions below on how to test if the
 - `algorithm implementations (Deutsch-Jozsa, BBB84, Quantum Teleportation, Grovers, Shors)`
 - `circuit visualizations`
 - `bloch sphere visualization`
+- `optional collapse of the quantum state`
 - `custom unitaries`
 
 ## Getting Started
