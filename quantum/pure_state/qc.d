@@ -1195,8 +1195,7 @@ struct QuantumCircuit {
         // sum probabilities of the qubit in each state
         for (int i = 0; i < this.state.length(); i++) {
             bool qubit_is_zero = (i & (1 << qubit_idx)) == 0;
-            bool qubit_is_one = (
-                i & (1 << qubit_idx)) != 0;
+            bool qubit_is_one = (i & (1 << qubit_idx)) != 0;
             if (qubit_is_zero) {
                 real state_prob = norm(this.state[i]);
                 probability_0 += state_prob;
@@ -1209,20 +1208,16 @@ struct QuantumCircuit {
         // get a random number over a uniform distribution
         auto rng = Random(unpredictableSeed);
         auto r = uniform(0.0, 1.0f, rng);
+
         int result; // determine measurement result
         if (r < probability_0) {
             result = 0;
-
-            if (do_collapse) {
-                collapse(qubit_idx, probability_0, result);
-            }
-        } else if (
-            r >= probability_0) {
+        } else if (r >= probability_0) {
             result = 1;
+        }
 
-            if (do_collapse) {
-                collapse(qubit_idx, probability_1, result);
-            }
+        if (do_collapse) {
+            collapse(qubit_idx, probability_1, result);
         }
 
         return format("%d", result);
@@ -1234,19 +1229,19 @@ struct QuantumCircuit {
     * params:
     * qubit_idx = The index of the qubit to measure
     *
-    * collapse = A boolean specifying whether or not to collapse the state
+    * do_collapse = A boolean specifying whether or not to collapse the state
     *
     * visualize = A boolean specifying whether or not to include measurement
     *             in the circuit diagram
     *
     * returns: A string representing the measured state of the qubit
     */
-    string measure(int qubit_idx, bool collapse = false, bool visualize = true) {
+    string measure(int qubit_idx, bool do_collapse = false, bool visualize = true) {
         if (visualize) {
             update_visualization_arr("M", [qubit_idx]);
         }
 
-        string result = measure_internal(qubit_idx, collapse);
+        string result = measure_internal(qubit_idx, do_collapse);
         return result;
     }
 
@@ -1320,19 +1315,19 @@ struct QuantumCircuit {
     * based on inverse transform sampling (https://en.wikipedia.org/wiki/Inverse_transform_sampling)
     *
     * params:
-    * collapse = A boolean specififying whether or not to collapse the state
+    * do_collapse = A boolean specififying whether or not to collapse the state
     *
     * visualize = A boolean speicifying whether or not to include measurement in
     *             the circuit diagram
     *
     * returns: the bitstring of the state which was measured probabilistically
     */
-    string measure_all(bool collapse = false, bool visualize = true) {
+    string measure_all(bool do_collapse = false, bool visualize = true) {
         if (visualize) {
             update_visualization_arr("MA", iota(0, this.num_qubits).array);
         }
 
-        string binary_result = measure_all_internal(collapse);
+        string binary_result = measure_all_internal(do_collapse);
         return binary_result;
     }
 

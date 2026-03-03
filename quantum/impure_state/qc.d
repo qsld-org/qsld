@@ -1174,9 +1174,69 @@ struct QuantumCircuit {
         return sum.re;
     }
 
+    // Collapse the state of a single qubit within the density matrix after measurement
+    private void collapse(int qubit_idx, int result, Matrix!(Complex!real) projection_0, Matrix!(
+            Complex!real) projection_1) {
+
+        Matrix!(Complex!real) identity = Matrix!(Complex!real)(2, 2, []).identity(2);
+        Matrix!(Complex!real) projector;
+        if (result == 0) {
+            projector = projection_0;
+        } else {
+            projector = projection_1;
+        }
+
+        Matrix!(Complex!real)[] kronecker_chain;
+        for (int i = this.num_qubits - 1; i >= 0; i--) {
+            if (i == qubit_idx) {
+                kronecker_chain[kronecker_chain.length++] = projector;
+            } else {
+                kronecker_chain[kronecker_chain.length++] = identity;
+            }
+        }
+
+        // get the full collapse operator embeded into the hilbert space
+        Matrix!(Complex!real) collapse_operator = kronecker_chain[0];
+        for (int i = 1; i < kronecker_chain.length; i++) {
+            collapse_operator = collapse_operator.kronecker(kronecker_chain[i]);
+        }
+
+        // get the unnormalized density matrix from applying the collapse operator
+        Matrix!(Complex!real) rho_temp = collapse_operator.mult_mat(this.density_mat)
+            .mult_mat(collapse_operator.dagger());
+        real rho_temp_trace = rho_temp.trace();
+
+        assert(rho_temp_trace != 0, "The trace is 0, something went wrong");
+
+        // Normalize the density matrix after collapse
+        for (int i = 0; i < rho_temp.row_num; i++) {
+            for (int j = 0; j < rho_temp.col_num; j++) {
+                rho_temp.rows[i].elems[j] = rho_temp.rows[i].elems[j] / rho_temp_trace;
+            }
+        }
+
+        this.density_mat = rho_temp;
+    }
+
+    // Collapse all the qubits in the density matrix after measurement
+    private void collapse_all(ulong result) {
+        Matrix!(Complex!real) rho_temp = this.density_mat;
+        for (ulong i = 0; i < rho_temp.row_num; i++) {
+            for (ulong j = 0; j < rho_temp.col_num; j++) {
+                if (i == result && j == result) {
+                    rho_temp.rows[i].elems[j] = Complex!real(1, 0);
+                } else {
+                    rho_temp.rows[i].elems[j] = Complex!real(0, 0);
+                }
+            }
+        }
+
+        this.density_mat = rho_temp;
+    }
+
     // measurement of a single qubit internal logic, this function exists
     // solely to prevent code duplication
-    private string measure_internal(int qubit_idx) {
+    private string measure_internal(int qubit_idx, bool do_collapse) {
 
         Matrix!(Complex!real) projection_0 = Matrix!(Complex!real)(2, 2, [
                 Vector!(Complex!real)(2, [
@@ -1232,11 +1292,14 @@ struct QuantumCircuit {
         auto r = uniform(0.0, 1.0f, rng);
 
         int result;
-
         if (r < probability_0) {
             result = 0;
         } else if (r >= probability_0) {
             result = 1;
+        }
+
+        if (do_collapse) {
+            collapse(qubit_idx, result, projection_0, projection_1);
         }
 
         return format("%d", result);
@@ -1248,14 +1311,19 @@ struct QuantumCircuit {
     * params: 
     * qubit_idx = The index of the qubit to measure
     *
+    * do_collapse = A boolean specifying whether or not to collapse the density matrix
+    *
+    * visualize = A boolean specifying whether or not to visualize the measurement
+    *             in the circuit diagram
+    *
     * returns: A string representing the state of the qubit measured
     */
-    string measure(int qubit_idx, bool visualize = true) {
+    string measure(int qubit_idx, bool do_collapse = false, bool visualize = true) {
         if (visualize) {
             update_visualization_arr("M", [qubit_idx]);
         }
 
-        string result = measure_internal(qubit_idx);
+        string result = measure_internal(qubit_idx, do_collapse);
         return result;
     }
 
@@ -1267,6 +1335,9 @@ struct QuantumCircuit {
     * qubit_idx = The index of the qubit to measure
     * 
     * shots = The amount of times to measure the qubit
+    *
+    * visualize = A boolean specifying whether or not to visualize the measurement
+    *             in the circuit diagram
     *
     * returns: A string to int map, representing the state 
     *          measured and the amount of times it was measured
@@ -1281,7 +1352,7 @@ struct QuantumCircuit {
 
         int[string] counts;
         for (int i = 0; i < shots; i++) {
-            string result = measure_internal(qubit_idx);
+            string result = measure_internal(qubit_idx, false);
             counts[result] += 1;
         }
         return counts;
@@ -1289,7 +1360,7 @@ struct QuantumCircuit {
 
     // measurement for the entire system internal logic, this function
     // exists solely to prevent code duplication
-    private string measure_all_internal() {
+    private string measure_all_internal(bool do_collapse) {
         Vector!(Complex!real) probs = this.density_mat.get_diagonal();
 
         auto rng = Random(unpredictableSeed);
@@ -1301,6 +1372,9 @@ struct QuantumCircuit {
             sum += prob.re;
             if (r < sum) {
                 binary_result = format("%0*b", this.num_qubits, i);
+                if (do_collapse) {
+                    collapse_all(i);
+                }
                 break;
             }
         }
@@ -1311,14 +1385,20 @@ struct QuantumCircuit {
     /**
     * Measure the entire system
     *
+    * params: 
+    * do_collapse = A boolean specifying whether or not to collapse the density matrix
+    *
+    * visualize = A boolean specifying whether or not to visualize the measurement
+    *             in the circuit diagram
+    *
     * returns: A bitstring representing the final state of the system
     */
-    string measure_all(bool visualize = true) {
+    string measure_all(bool do_collapse = false, bool visualize = true) {
         if (visualize) {
             update_visualization_arr("MA", iota(0, this.num_qubits).array);
         }
 
-        string binary_result = measure_all_internal();
+        string binary_result = measure_all_internal(do_collapse);
         return binary_result;
     }
 
@@ -1328,6 +1408,9 @@ struct QuantumCircuit {
     *
     * params:
     * shots = The amount of times to measure the entire system
+    *
+    * visualize = A boolean specifying whether or not to visualize the measurement
+    *             in the circuit diagram
     *
     * returns: An associative array of bitstring to amount of times it was measured
     */
@@ -1341,7 +1424,7 @@ struct QuantumCircuit {
 
         int[string] counts;
         for (int i = 0; i < shots; i++) {
-            string binary_result = measure_all_internal();
+            string binary_result = measure_all_internal(false);
             counts[binary_result] += 1;
         }
         return counts;
