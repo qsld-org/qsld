@@ -42,7 +42,8 @@ string[] library_files = [
     "qec/decoder.d",
     "qec/lib.d",
     "topological/lib.d",
-    "topological/pure_state/tqc.d"
+    "topological/pure_state/tqc.d",
+    "vqe/vqe.d"
 ];
 
 void compile(string[] compile_cmd, bool library = true, string example_name = "") {
