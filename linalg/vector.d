@@ -220,7 +220,7 @@ struct Vector(T) {
     *
     * returns: A real number representing the magnitude
     */
-    real mag()() if (is(T == Complex!real)) {
+    real mag()() if (is(T == Complex!real) || is(T == real)) {
         real sum = 0;
         foreach (elem; this.elems) {
             sum = sum + pow(abs(elem), 2);

@@ -1,5 +1,6 @@
 module examples.vqe;
 
+import std.stdio;
 import std.complex;
 
 import quantum.pure_state.qc;
@@ -14,8 +15,6 @@ import vqe.vqe;
 * The expectation value of the hamiltonian gives an energy for a specific state and the classical optimizer modifies 
 * the trainable parameters in order to minimize the energy given by the expectation value of the hamiltonian.
 */
-
-// Example 1:
 
 /* 
 * The variational quantum circuit uses trainable parameters
@@ -67,16 +66,63 @@ void main() {
         Complex!real(-0.7, 0), Complex!real(-0.7, 0), Complex!real(-0.7, 0)
     ], 3);
 
-    // Initialize the VQE algorithm with 3 qubits, the previously defined hamiltonian. 6
-    // trainable parameters to make the ansatz more expressive, 180 total iterations of the 
-    // algorithm, a learning rate which is reasonable (not too high or low) and the ansatz which 
-    // we previously defined.
+    // Example 1;
+
+    writeln("--------------");
+    writeln("1st example");
+    writeln("--------------");
+
     int num_qubits = 3;
     real[] trainable_params = [-0.13, 0.23, -0.15, 0.2, 0.11, -0.06];
     real learning_rate = 0.16;
     int iterations = 180;
-    VQE vqe = VQE(num_qubits, hamiltonian, trainable_params, iterations, learning_rate, &vqc);
 
-    // Execute the algorithm, the minimum energy should converge to -3.477
+    // Initialize the VQE algorithm with 3 qubits, the previously defined hamiltonian. 6
+    // trainable parameters to make the ansatz more expressive, 180 total iterations of the 
+    // algorithm, a learning rate which is reasonable (not too high or low), the parameter 
+    // optimizer and the ansatz which we previously defined. Parameter shift is a special 
+    // kind of optimization which uses a modified version of gradient descent to minimize the 
+    // energy of the system.
+    VQE vqe = VQE(num_qubits, hamiltonian, trainable_params, iterations, learning_rate, OptimizerType.ParameterShift, &vqc);
+
+    // Execute the algorithm, the minimum energy should converge to -3.477639
     vqe.vqe();
+
+    // Example 2:
+
+    writeln("---------------");
+    writeln("2nd example");
+    writeln("---------------");
+
+    // Redefine some parameters for the new optimizer algorithm
+    iterations = 62;
+    learning_rate = 0.0;
+
+    // reset the trainable parameters since they are stored in memory
+    trainable_params = [-0.13, 0.23, -0.15, 0.2, 0.11, -0.06];
+
+    // The new optimizer known as COBYLA or "Constrained Optimization BY Linear Approximation" 
+    // algorithm is different from parameter shift as it does not use derivatives and instead 
+    // relies on linear interpolation and reducing a trust region known as rho in order to get 
+    // closer and closer to the lowest energy of the system. It reduces the trust region by solving 
+    // a linear system using gaussian elimination and back substitution. The interpolation method being
+    // specified has to do with how it offsets the trainable parameters using the value of rho. Symmetric
+    // means that it will add and subtract the value of rho to the parameters. Biased positive means it will 
+    // only add the value of rho to the parameters and biased negative means it will only subtract.
+    CobylaConfig cobyla_conf = CobylaConfig(0.2, 0.000000001, 0.4, InterpolationMethod.Symmetric);
+
+    // Define another instance of the VQE object with similiar parameters except it does not use
+    // a learning rate because the optimizer does not rely on gradient descent. Because the COBYLA
+    // optimizer is very sensitive to hyperparameters, it is capable of converging to the lowest energy
+    // of the system in only 57 iterations compared to the 175 from parameter shift. This difference in
+    // iterations is not a matter of performance but rather core differences in the optimizer. Parameter shift
+    // is "cautious", that is it takes small steps against the gradient whereas COBYLA takes larger and more 
+    // "confident" steps against the gradient. 
+    // 
+    // NOTE: You can just not pass the CobylaConfig as it has default settings but they may not be optimal for your
+    // problem space.
+    VQE vqe2 = VQE(num_qubits, hamiltonian, trainable_params, iterations, learning_rate, OptimizerType.Cobyla, &vqc, cobyla_conf);
+
+    // Execute the algorithm, the minimum energy should once again converge to -3.477639
+    vqe2.vqe();
 }
