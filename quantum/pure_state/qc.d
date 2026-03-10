@@ -1125,7 +1125,7 @@ struct QuantumCircuit {
     }
 
     /**
-    * Represents a non-controlled custom unitary gate which is user defined
+    * Represents a non-controlled custom unitary gate which is user defined as a circuit
     *
     * params:
     * vis_name = The subscript that will proceed U in the visualization of the circuit
@@ -1134,13 +1134,54 @@ struct QuantumCircuit {
     *
     * f = The function which will be executed to reperesent the unitaries action on the circuit
     */
-    void custom_unitary(string vis_name, int[] qubit_idxs, void function(QuantumCircuit* qc) f) {
+    void cu(string vis_name, int[] qubit_idxs, void function(QuantumCircuit* qc) f) {
         assert(qubit_idxs.length >= 1, "The qubit indexes array should contain at least one index, it does not");
 
         vis_name = format("U_{%s}", vis_name);
         update_visualization_arr(vis_name, qubit_idxs);
 
         f(&this);
+    }
+
+    /*
+    * Represents a controlled custom unitary gate which is user defined as a circuit
+    *
+    * params:
+    * control_qubit_idx = The qubit index whose value determines whether the custom unitary
+    *                     is applied to the target_qubit_idxs.
+    *
+    * target_qubit_idxs = The indices of the qubits to apply the custom unitary to when the
+    *                     control is 1.
+    *
+    * f = The function which will be executed to represent the unitaries action on the circuit.
+    *     Note that using controlled operations within the circuit in this function will cause
+    *     undefined behavior and therefore is unsupported.
+    */
+    void ccu(int control_qubit_idx, int[] target_qubit_idxs, void function(
+            QuantumCircuit* qc, int target) f) {
+
+        assert(target_qubit_idxs.length >= 1,
+            "The target qubit indices array should contain at leat one qubit index, it does not");
+
+        for (int i = 0; i < this.state.length(); i++) {
+            bool control_is_one = (i & (1 << control_qubit_idx)) != 0;
+
+            bool skip = false;
+            foreach (idx; target_qubit_idxs) {
+                if ((i & (1 << idx)) != 0) {
+                    skip = true;
+                    break;
+                }
+            }
+
+            if (skip) {
+                continue;
+            }
+
+            if (control_is_one) {
+                f(&this, i);
+            }
+        }
     }
 
     /**
