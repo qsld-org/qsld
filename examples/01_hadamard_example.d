@@ -25,28 +25,41 @@ void main() {
 
     // Example 2:
 
+    // Initialize a quantum circuit with 1 qubit but in the |1> state
+    QuantumCircuit qc2 = QuantumCircuit(1, 1);
+
+    // Apply the hadamard gate to the qubit at the 0th index
+    qc2.hadamard(0);
+
+    writeln("Example 2: The state vector after hadamard on 1 qubit in a 1 qubit system in the state |1>: ", qc2
+            .state.elems);
+
+    //----------------------------------------------------------------------------------------------------------
+
+    // Example 3:
+
     // Initialize a quantum circuit with two qubits
-    QuantumCircuit qc2 = QuantumCircuit(2);
+    QuantumCircuit qc3 = QuantumCircuit(2);
 
     // Apply hadamard to only one qubit in the system to see its effect
     // on the superposition.
-    qc2.hadamard(0);
+    qc3.hadamard(0);
 
-    writeln("Example 2: The state vector after hadamard on 1 qubit in a 2 qubit system: ", qc2
+    writeln("Example 3: The state vector after hadamard on 1 qubit in a 2 qubit system: ", qc3
             .state.elems);
 
     //-----------------------------------------------------------------------------------------------------------
 
-    // Example 3:
+    // Example 4:
 
     //Initialize a quantum circuit with 2 qubits
-    QuantumCircuit qc3 = QuantumCircuit(2);
+    QuantumCircuit qc4 = QuantumCircuit(2);
 
     // Apply hadamard to all qubits in the system to see the effect on the superposition
-    qc3.hadamard(0);
-    qc3.hadamard(1);
+    qc4.hadamard(0);
+    qc4.hadamard(1);
 
-    writeln("Example 3: The state vector after apply hadamard to all qubits in a 2 qubit system: ", qc3
+    writeln("Example 4: The state vector after apply hadamard to all qubits in a 2 qubit system: ", qc4
             .state.elems);
 
     // Tip: try increasing the number qubits and applying hadamards to different indices below to see what happens
