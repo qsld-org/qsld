@@ -34,6 +34,7 @@ string[] library_files = [
     "algos/shors.d",
     "algos/bbb84.d",
     "algos/quantum_teleportation.d",
+    "algos/dense_coding.d",
     "viz/visualization.d",
     "viz/bloch_sphere/pure_state/bloch_sphere.d",
     "viz/bloch_sphere/impure_state/bloch_sphere.d",
