@@ -145,7 +145,9 @@ struct Visualization {
                     }
                 } else {
                     if (gate_name == "M") {
-                        this.lines[qubit_idxs[0]][this.lines[qubit_idxs[0]].length++] = " \\meter{} &";
+                        foreach (idx; qubit_idxs) {
+                            this.lines[qubit_idxs[idx]][this.lines[qubit_idxs[idx]].length++] = " \\meter{} &";
+                        }
                     } else if (gate_name == "MA") {
                         foreach (idx; qubit_idxs) {
                             this.lines[qubit_idxs[idx]][this.lines[qubit_idxs[idx]].length++] = " \\meter{} &";
