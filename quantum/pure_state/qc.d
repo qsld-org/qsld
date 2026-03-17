@@ -22,6 +22,7 @@ import std.typecons;
 import std.range;
 import std.array;
 import std.file;
+import std.algorithm.sorting;
 
 // linear algebra modules
 import linalg.matrix;
@@ -68,8 +69,10 @@ struct QuantumCircuit {
 
         int num_probabilities = pow(2, this.num_qubits);
         Complex!real[] state_arr = new Complex!real[num_probabilities];
+
         //initialize state vector to all 0+0i amplitudes
         state_arr[] = Complex!real(0, 0);
+
         // start with a valid classical state by setting one of the amplitudes probabilities to 100%
         state_arr[0] = Complex!real(1, 0);
 
@@ -96,8 +99,10 @@ struct QuantumCircuit {
 
         int num_probabilities = pow(2, this.num_qubits);
         Complex!real[] state_arr = new Complex!real[num_probabilities];
+
         //initialize state vector to all 0+0i amplitudes
         state_arr[] = Complex!real(0, 0);
+
         // start with a valid classical state by setting one of the amplitudes probabilities to 100%
         state_arr[starting_state_idx] = Complex!real(1, 0);
 
@@ -124,8 +129,10 @@ struct QuantumCircuit {
 
         int num_probabilities = pow(2, this.num_qubits);
         Complex!real[] state_arr = new Complex!real[num_probabilities];
+
         //initialize state vector to all 0+0i amplitudes
         state_arr[] = Complex!real(0, 0);
+
         // start with a valid classical state by setting one of the amplitudes probabilities to 100%
         state_arr[0] = Complex!real(1, 0);
 
@@ -155,8 +162,10 @@ struct QuantumCircuit {
 
         int num_probabilities = pow(2, this.num_qubits);
         Complex!real[] state_arr = new Complex!real[num_probabilities];
+
         //initialize state vector to all 0+0i amplitudes
         state_arr[] = Complex!real(0, 0);
+
         // start with a valid classical state by setting one of the amplitudes probabilities to 100%
         state_arr[starting_state_idx] = Complex!real(1, 0);
 
@@ -181,8 +190,10 @@ struct QuantumCircuit {
 
         int num_probabilities = pow(2, this.num_qubits);
         Complex!real[] state_arr = new Complex!real[num_probabilities];
+
         //initialize state vector to all 0+0i amplitudes
         state_arr[] = Complex!real(0, 0);
+
         // start with a valid classical state by setting one of the amplitudes probabilities to 100%
         state_arr[0] = Complex!real(1, 0);
 
@@ -215,8 +226,10 @@ struct QuantumCircuit {
 
         int num_probabilities = pow(2, this.num_qubits);
         Complex!real[] state_arr = new Complex!real[num_probabilities];
+
         //initialize state vector to all 0+0i amplitudes
         state_arr[] = Complex!real(0, 0);
+
         // start with a valid classical state by setting one of the amplitudes probabilities to 100%
         state_arr[starting_state_idx] = Complex!real(1, 0);
 
@@ -346,9 +359,7 @@ struct QuantumCircuit {
             bool qubit_is_one = (i & (1 << qubit_idx)) != 0;
             if (!qubit_is_one) {
                 int j = i ^ (1 << qubit_idx);
-                pairs[pairs_idx] = Vector!int(2, [
-                        i, j
-                    ]);
+                pairs[pairs_idx] = Vector!int(2, [i, j]);
                 pairs_idx++;
             }
         }
@@ -401,7 +412,8 @@ struct QuantumCircuit {
     * target_qubit_idx = the index of the qubit which is affected by the control 
     */
     void ch(int control_qubit_idx, int target_qubit_idx, bool visualize = true) {
-        assert(this.num_qubits >= 2, "The number of qubits must be greater than or equal to two in order to use controlled gates");
+        assert(this.num_qubits >= 2,
+            "The number of qubits must be greater than or equal to two in order to use controlled gates");
 
         if (visualize) {
             update_visualization_arr("CH", [control_qubit_idx, target_qubit_idx]);
@@ -459,9 +471,7 @@ struct QuantumCircuit {
             bool qubit_is_zero = (i & (1 << qubit_idx)) == 0;
             if (qubit_is_zero) {
                 int j = i ^ (1 << qubit_idx);
-                pairs[pairs_idx] = Vector!int(2, [
-                        i, j
-                    ]);
+                pairs[pairs_idx] = Vector!int(2, [i, j]);
                 pairs_idx++;
             }
         }
@@ -830,7 +840,8 @@ struct QuantumCircuit {
     * qubit2 = the second qubit to be swapped by the gate
     */
     void swap(int qubit1, int qubit2, bool visualize = true) {
-        assert(this.num_qubits >= 2, "The number of qubits must be greater than or equal to two in order to use the swap gates");
+        assert(this.num_qubits >= 2,
+            "The number of qubits must be greater than or equal to two in order to use the swap gates");
 
         if (visualize) {
             update_visualization_arr("SWAP", [qubit1, qubit2]);
@@ -943,6 +954,7 @@ struct QuantumCircuit {
         Vector!(Complex!real) psi = Vector!(Complex!real)(
             cast(int) this.state.length(), new Complex!real[this
                 .state.length()]);
+
         // The .init value of psi without this loop will be nan+nani for all elements
         for (int i = 0; i < psi.length(); i++) {
             psi[i] = Complex!real(0, 0);
@@ -957,7 +969,9 @@ struct QuantumCircuit {
                 psi[j] = s * a + c * b;
             }
         }
-        this.state = psi; // This will only happen if DecoherenceConfig.decoherence_mode is
+        this.state = psi;
+
+        // This will only happen if DecoherenceConfig.decoherence_mode is
         // set to automatic
         apply_decoherence(qubit_idx, 30);
     }
@@ -1013,7 +1027,9 @@ struct QuantumCircuit {
                 psi[j] = s * a + c * b;
             }
         }
-        this.state = psi; // This will only happen if DecoherenceConfig.decoherence_mode is
+        this.state = psi;
+
+        // This will only happen if DecoherenceConfig.decoherence_mode is
         // set to automatic
         apply_decoherence(qubit_idx, 30);
     }
@@ -1047,10 +1063,8 @@ struct QuantumCircuit {
             update_visualization_arr("R_Z", [qubit_idx]);
         }
 
-        Complex!real z0 = exp(Complex!real(0, -1) * Complex!real(
-                theta / 2, 0));
-        Complex!real z1 = exp(Complex!real(0, 1) * Complex!real(
-                theta / 2, 0));
+        Complex!real z0 = exp(Complex!real(0, -1) * Complex!real(theta / 2, 0));
+        Complex!real z1 = exp(Complex!real(0, 1) * Complex!real(theta / 2, 0));
         for (int i = 0; i < this.state.length(); i++) {
             int qubit_value = (i >> qubit_idx) & 1;
             if (qubit_value == 0) {
@@ -1102,18 +1116,14 @@ struct QuantumCircuit {
         }
 
         for (int i = 0; i < this.state.length(); i++) {
-            int cntl_qubit_val = (
-                i >> control_qubit_idx) & 1;
-            int tgt_qubit_val = (
-                i >> target_qubit_idx) & 1;
+            int cntl_qubit_val = (i >> control_qubit_idx) & 1;
+            int tgt_qubit_val = (i >> target_qubit_idx) & 1;
 
             if (cntl_qubit_val == 1 && tgt_qubit_val == 1) {
                 if (!inverse) {
-                    this.state[i] = this.state[i] * expi(
-                        2 * PI / pow(2.0, k));
+                    this.state[i] = this.state[i] * expi(2 * PI / pow(2.0, k));
                 } else {
-                    this.state[i] = this.state[i] * expi(
-                        -2 * PI / pow(2.0, k));
+                    this.state[i] = this.state[i] * expi(-2 * PI / pow(2.0, k));
                 }
             }
         }
@@ -1143,47 +1153,6 @@ struct QuantumCircuit {
         f(&this);
     }
 
-    /*
-    * Represents a controlled custom unitary gate which is user defined as a circuit
-    *
-    * params:
-    * control_qubit_idx = The qubit index whose value determines whether the custom unitary
-    *                     is applied to the target_qubit_idxs.
-    *
-    * target_qubit_idxs = The indices of the qubits to apply the custom unitary to when the
-    *                     control is 1.
-    *
-    * f = The function which will be executed to represent the unitaries action on the circuit.
-    *     Note that using controlled operations within the circuit in this function will cause
-    *     undefined behavior and therefore is unsupported.
-    */
-    void ccu(int control_qubit_idx, int[] target_qubit_idxs, void function(
-            QuantumCircuit* qc, int target) f) {
-
-        assert(target_qubit_idxs.length >= 1,
-            "The target qubit indices array should contain at leat one qubit index, it does not");
-
-        for (int i = 0; i < this.state.length(); i++) {
-            bool control_is_one = (i & (1 << control_qubit_idx)) != 0;
-
-            bool skip = false;
-            foreach (idx; target_qubit_idxs) {
-                if ((i & (1 << idx)) != 0) {
-                    skip = true;
-                    break;
-                }
-            }
-
-            if (skip) {
-                continue;
-            }
-
-            if (control_is_one) {
-                f(&this, i);
-            }
-        }
-    }
-
     /**
     * Computes the expectation value of an observable on the current quantum state of the system
     * 
@@ -1196,9 +1165,7 @@ struct QuantumCircuit {
     real expectation_value(Observable observable) {
         Matrix!(Complex!real) psi_dagger = this.state.dagger();
         Vector!(Complex!real) phi = observable.apply(this.state);
-
         real result = psi_dagger.inner_product(phi);
-
         return result;
     }
 
@@ -1250,7 +1217,8 @@ struct QuantumCircuit {
         auto rng = Random(unpredictableSeed);
         auto r = uniform(0.0, 1.0f, rng);
 
-        int result; // determine measurement result
+        int result;
+        // determine measurement result
         if (r < probability_0) {
             result = 0;
         } else if (r >= probability_0) {
@@ -1306,9 +1274,7 @@ struct QuantumCircuit {
             "using this overload of the measure function requires shots to be greater than or equal to 2, it is recommended to use over a 1000");
 
         if (visualize) {
-            update_visualization_arr("M", [
-                    qubit_idx
-                ]);
+            update_visualization_arr("M", [qubit_idx]);
         }
 
         int[string] counts;
@@ -1322,8 +1288,8 @@ struct QuantumCircuit {
     // Measurement for the entire system internal logic, this function exists solely 
     // to prevent code duplication
     private string measure_all_internal(bool do_collapse) {
-        Vector!float probs = Vector!float(
-            cast(int) this.state.length(), new float[this.state.length()]);
+        Vector!float probs = Vector!float(cast(int) this.state.length(), new float[this.state.length()]);
+
         // Take the magnitude of each complex probability amplitude
         foreach (i, c; this.state.elems) {
             float magnitude = sqrt(pow(c.re, 2) + pow(c.im, 2));
@@ -1414,8 +1380,7 @@ struct QuantumCircuit {
      *           the \slice command specifically
      */
     void slice(string label, string options = "style=black") {
-        update_visualization_arr(format("slice[%s]{%s}", options, label), [
-            ]);
+        update_visualization_arr(format("slice[%s]{%s}", options, label), []);
     }
 
     /**
@@ -1430,8 +1395,7 @@ struct QuantumCircuit {
     *                   the latex compiler
     */
     void draw(string compiler = "pdflatex", string filename = "circuit.tex", bool remove_pdf_file = true) {
-        this.vis = Visualization(this.visualization_arr, this.num_qubits, this
-                .initial_state_idx);
+        this.vis = Visualization(this.visualization_arr, this.num_qubits, this.initial_state_idx);
         this.vis.parse_and_write_vis_arr(filename);
         this.vis.compile_tex_and_cleanup(compiler, filename);
         string[] filename_split = filename.split(".");
@@ -1440,6 +1404,7 @@ struct QuantumCircuit {
 
         if (remove_pdf_file) {
             string pdf_fname = filename_prefix ~ ".pdf";
+
             if (exists(pdf_fname)) {
                 remove(pdf_fname);
             }
@@ -1459,8 +1424,7 @@ struct QuantumCircuit {
     *                   the latex compiler
     */
     void draw(string filename, bool remove_pdf_file = true) {
-        this.vis = Visualization(this.visualization_arr, this.num_qubits, this
-                .initial_state_idx);
+        this.vis = Visualization(this.visualization_arr, this.num_qubits, this.initial_state_idx);
         string compiler = "pdflatex";
         this.vis.parse_and_write_vis_arr(filename);
         this.vis.compile_tex_and_cleanup(compiler, filename);
@@ -1471,6 +1435,7 @@ struct QuantumCircuit {
 
         if (remove_pdf_file) {
             string pdf_fname = filename_prefix ~ ".pdf";
+
             if (exists(pdf_fname)) {
                 remove(pdf_fname);
             }
@@ -1507,24 +1472,19 @@ struct QuantumCircuit {
         real n = 0;
         real d = 1;
         real[] frac_coeff_list;
-        frac_coeff_list ~= floor(
-            q);
+        frac_coeff_list ~= floor(q);
 
-        real[] numerator_list = [
-            1,
-            frac_coeff_list[0]
-        ];
-        real[] denominator_list = [
-            0,
-            1
-        ];
+        real[] numerator_list = [1, frac_coeff_list[0]];
+        real[] denominator_list = [0, 1];
         real denominator_max = 128;
         real tolerance = 1e-12;
         int iteration = 2;
         while (true) {
             real frac_part = q - floor(q);
+
             if (abs(frac_part) < tolerance)
                 break;
+
             real r = 1.0 / frac_part;
             frac_coeff_list ~= floor(r);
             real numerator = frac_coeff_list[iteration - 1] * numerator_list[iteration - 1] + numerator_list[iteration - 2];
@@ -1567,6 +1527,7 @@ struct QuantumCircuit {
             } else {
                 float theta = atan2(amplitude.im, amplitude.re);
                 float q = theta / PI;
+
                 string rel_phase = find_phase_frac(q);
                 rel_phases ~= rel_phase;
             }

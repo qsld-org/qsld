@@ -43,6 +43,23 @@ struct QFT {
     }
 
     /**
+    * Overload of the qft function which only takes specific
+    * qubit indices to act on
+    */
+    void qft(int[] qubit_idxs) {
+        for (int i = 0; i < qubit_idxs.length; i++) {
+            for (int j = i + 1; j < qubit_idxs.length; j++) {
+                this.qc.cr(qubit_idxs[i], qubit_idxs[j], j - i + 1);
+            }
+            this.qc.hadamard(qubit_idxs[i]);
+        }
+
+        for (int i = 0; i < qubit_idxs.length / 2; i++) {
+            this.qc.swap(qubit_idxs[i], qubit_idxs[cast(int) qubit_idxs.length - (i + 1)]);
+        }
+    }
+
+    /**
     * Undoes the operation of the QFT
     */
     void qft_inverse() {
@@ -55,6 +72,23 @@ struct QFT {
 
         for (int i = 0; i < this.num_qubits / 2; i++) {
             this.qc.swap(i, this.num_qubits - (i + 1));
+        }
+    }
+
+    /**
+    * Overload of the inverse qft which only takes specific 
+    * qubit indices to act on
+    */
+    void qft_inverse(int[] qubit_idxs) {
+        for (int i = cast(int) qubit_idxs.length - 1; i >= 0; i--) {
+            for (int j = 0; j < i; j++) {
+                this.qc.cr(qubit_idxs[j], qubit_idxs[i], i - j + 1, true);
+            }
+            this.qc.hadamard(qubit_idxs[i]);
+        }
+
+        for (int i = 0; i < qubit_idxs.length / 2; i++) {
+            this.qc.swap(qubit_idxs[i], qubit_idxs[cast(int) qubit_idxs.length - (i + 1)]);
         }
     }
 }
