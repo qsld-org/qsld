@@ -1,4 +1,4 @@
-module algos.bbb84;
+module algos.bb84;
 
 import std.stdio;
 import std.random;
@@ -13,7 +13,7 @@ import std.algorithm : canFind, map;
 import quantum.pure_state.qc;
 import quantum.pure_state.gate_noise;
 
-struct BBB84 {
+struct BB84 {
     QuantumCircuit qc;
     int num_qubits;
     bool check_compromised;
@@ -26,7 +26,7 @@ struct BBB84 {
     int[] e_bases;
 
     /**
-    * Constructor for the BBB84 protocol object, to be used when
+    * Constructor for the BB84 protocol object, to be used when
     * calling the ideal implementaion of the protocol
     *
     * params:
@@ -52,7 +52,7 @@ struct BBB84 {
     }
 
     /**
-    * Constructor for the BBB84 protocol object, to be used when
+    * Constructor for the BB84 protocol object, to be used when
     * calling the intercept resend or any noisy implementaion of 
     * the protocol with Eve
     *
@@ -81,7 +81,7 @@ struct BBB84 {
     }
 
     /**
-    * Constructor for the BBB84 protocol object, to be used when
+    * Constructor for the BB84 protocol object, to be used when
     * calling the intercept resend or any noisy implementaion of 
     * the protocol with Eve. However, the key compromisation check is
     * configurable.
@@ -281,11 +281,11 @@ struct BBB84 {
     }
 
     /** 
-    * Executes the BBB84 protocol where Eve uses the intercept 
+    * Executes the BB84 protocol where Eve uses the intercept 
     * resend attack to spy on Alice and Bob. Eve will measure every
     * qubit sent by Alice.
     */
-    void bbb84_intercept_resend_full() {
+    void bb84_intercept_resend_full() {
         this.a_bits = generate_rand_bits();
         this.a_bases = generate_rand_bits();
 
@@ -336,14 +336,14 @@ struct BBB84 {
     }
 
     /**
-    * Executes the BBB84 protocol where Eve attacks only a fraction of 
+    * Executes the BB84 protocol where Eve attacks only a fraction of 
     * the qubits sent by Alice based on the parameter provided.
     *
     * params:
     * attack_fraction = The fraction, as a decimal of qubits for Eve to 
     *                   attack and resend
     */
-    void bbb84_intercept_resend_partial(double attack_fraction) {
+    void bb84_intercept_resend_partial(double attack_fraction) {
         this.a_bits = generate_rand_bits();
         this.a_bases = generate_rand_bits();
 
@@ -410,13 +410,13 @@ struct BBB84 {
     }
 
     /**
-    * Executes the BBB84 protocol where Eve uses one basis more than 
+    * Executes the BB84 protocol where Eve uses one basis more than 
     * the other based on the parameter provided.
     * 
     * params;
     * basis_bias = The amount that Eve will use one basis over the other as a decimal
     */
-    void bbb84_biased_basis_eve(double basis_bias) {
+    void bb84_biased_basis_eve(double basis_bias) {
         this.a_bits = generate_rand_bits();
         this.a_bases = generate_rand_bits();
 
@@ -462,13 +462,13 @@ struct BBB84 {
     }
 
     /**
-    * Executes the BBB84 protocol where Eve always measures qubits sent
+    * Executes the BB84 protocol where Eve always measures qubits sent
     * by Alice in the same basis based on the parameter provided
     * 
     * params:
     * basis = An integer representing the basis Eve will always measure in, 0 = z, 1 = x
     */
-    void bbb84_fixed_basis_eve(int basis) {
+    void bb84_fixed_basis_eve(int basis) {
         // define the basis Eve will always measure in
         if (basis == 0) { // z basis
             for (int i = 0; i < this.e_bases.length; i++) {
@@ -537,13 +537,13 @@ struct BBB84 {
     }
 
     /**
-    * Executes the BBB84 protocol but Eve is simulated as noise instead of 
+    * Executes the BB84 protocol but Eve is simulated as noise instead of 
     * measuring Alices qubits in her own randomly generated bases
     *
     * params:
     * depolarizing_prob = The probability of depolarizing noise being applied to a qubit
     */
-    void bbb84_eve_noise(float depolarizing_prob) {
+    void bb84_eve_noise(float depolarizing_prob) {
         this.a_bits = generate_rand_bits();
         this.a_bases = generate_rand_bits();
 
@@ -584,9 +584,9 @@ struct BBB84 {
     }
 
     /**
-    * Runs the BBB84 protocol in an ideal scenario without errors or eve
+    * Runs the BB84 protocol in an ideal scenario without errors or eve
     */
-    void bbb84_ideal() {
+    void bb84_ideal() {
         this.a_bits = generate_rand_bits();
         this.a_bases = generate_rand_bits();
 

@@ -32,7 +32,7 @@ string[] library_files = [
     "algos/deutsch_jozsa.d",
     "algos/grovers.d",
     "algos/shors.d",
-    "algos/bbb84.d",
+    "algos/bb84.d",
     "algos/quantum_teleportation.d",
     "algos/dense_coding.d",
     "viz/visualization.d",
