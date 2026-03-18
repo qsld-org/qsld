@@ -103,7 +103,7 @@ to install the blochsphere package. See instructions below on how to test if the
 - `expectation value calculation`
 - `gate noise`
 - `decoherence (T1/T2 decay)`
-- `algorithm implementations (Deutsch-Jozsa, BBB84, Quantum Teleportation, Grovers, Shors)`
+- `algorithm implementations (Deutsch-Jozsa, BB84, Quantum Teleportation, Grovers, Shors, Dense Coding, VQE)`
 - `circuit visualizations`
 - `bloch sphere visualization`
 - `optional collapse of the quantum state`
