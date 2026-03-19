@@ -90,11 +90,14 @@ struct QuantumTeleportation {
         bob_qc_norm = sqrt(bob_qc_norm);
 
         foreach (i, amp; bob_qc.state.elems) {
-            if (amp.re != 0) {
+            if (amp.re != 0 && amp.im == 0) {
                 bob_qc.state.elems[i] = Complex!real(amp.re / bob_qc_norm, 0);
-            } else {
+            } else if (amp.re == 0 && amp.im != 0) {
                 bob_qc.state.elems[i] = Complex!real(0, amp.im / bob_qc_norm);
+            } else if (amp.re != 0 && amp.im != 0) {
+                bob_qc.state.elems[i] = Complex!real(amp.re / bob_qc_norm, amp.im / bob_qc_norm);
             }
+
         }
 
         writeln("The full state vector is: ", qc.state.elems);
