@@ -3,6 +3,8 @@ module algos.quantum_teleportation;
 import std.stdio;
 import std.format;
 import std.conv;
+import std.complex;
+import std.math;
 
 import quantum.pure_state.qc;
 
@@ -37,8 +39,8 @@ struct QuantumTeleportation {
 
         // Measure qubits 0 and 1 to get what Bob should do with 
         // his qubit
-        string q0_measured = qc.measure(0);
-        string q1_measured = qc.measure(1);
+        string q0_measured = qc.measure(0, true);
+        string q1_measured = qc.measure(1, true);
 
         int q0_state = to!int(q0_measured);
         int q1_state = to!int(q1_measured);
@@ -57,7 +59,7 @@ struct QuantumTeleportation {
         // Draw the cicuit (commented because it is unnecessary in most cases)
         // qc.draw();
 
-        writeln(format("Bob measured: %d%d", q0_state, q1_state));
+        writeln(format("Bob measured: %d%d", q1_state, q0_state));
 
         // Declare bob's final qubit as a cicuit
         QuantumCircuit bob_qc = QuantumCircuit(1);
@@ -76,6 +78,22 @@ struct QuantumTeleportation {
                 // Put the amplitudes corresponding to Bob's bit into 
                 // Bob's state vector for his qubit
                 bob_qc.state.elems[bob_bit] = qc.state.elems[i];
+            }
+        }
+
+        // normalize bob's state vector
+        real bob_qc_norm = 0;
+        foreach (amp; bob_qc.state.elems) {
+            bob_qc_norm += norm(amp);
+        }
+
+        bob_qc_norm = sqrt(bob_qc_norm);
+
+        foreach (i, amp; bob_qc.state.elems) {
+            if (amp.re != 0) {
+                bob_qc.state.elems[i] = Complex!real(amp.re / bob_qc_norm, 0);
+            } else {
+                bob_qc.state.elems[i] = Complex!real(0, amp.im / bob_qc_norm);
             }
         }
 
