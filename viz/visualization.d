@@ -145,12 +145,12 @@ struct Visualization {
                     }
                 } else {
                     if (gate_name == "M") {
-                        foreach (idx; qubit_idxs) {
-                            this.lines[qubit_idxs[idx]][this.lines[qubit_idxs[idx]].length++] = " \\meter{} &";
+                        for (int k = 0; k < qubit_idxs.length; k++) {
+                            this.lines[qubit_idxs[k]][this.lines[qubit_idxs[k]].length++] = " \\meter{} &";
                         }
                     } else if (gate_name == "MA") {
-                        foreach (idx; qubit_idxs) {
-                            this.lines[qubit_idxs[idx]][this.lines[qubit_idxs[idx]].length++] = " \\meter{} &";
+                        for (int k = 0; k < qubit_idxs.length; k++) {
+                            this.lines[qubit_idxs[k]][this.lines[qubit_idxs[k]].length++] = " \\meter{} &";
                         }
                     }
                 }
