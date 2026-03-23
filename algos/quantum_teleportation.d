@@ -97,7 +97,6 @@ struct QuantumTeleportation {
             } else if (amp.re != 0 && amp.im != 0) {
                 bob_qc.state.elems[i] = Complex!real(amp.re / bob_qc_norm, amp.im / bob_qc_norm);
             }
-
         }
 
         writeln("The full state vector is: ", qc.state.elems);

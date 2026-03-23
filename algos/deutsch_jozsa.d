@@ -11,6 +11,11 @@ import std.conv : to;
 
 import quantum.pure_state.qc;
 
+enum FunctionType {
+    Balanced,
+    Constant,
+}
+
 struct DeutschJozsa {
     int num_qubits;
     QuantumCircuit qc;
@@ -39,12 +44,12 @@ struct DeutschJozsa {
     // equal number of 0's and 1's. When the function is constant such that f(x) = 0 or f(x) = 1, 
     // the output will most of the time be all 0 (ideally). If the function is balanced the output
     // should be anything but all 0. 
-    private void oracle_gate(int delegate(string) f, string type) {
+    private void oracle_gate(int delegate(string) f, FunctionType type) {
         string bit_str = format("%0*b", this.num_qubits - 1, cast(int) rand() % (
                 1 << (this.num_qubits - 1)));
 
         switch (type) {
-        case "balanced":
+        case FunctionType.Balanced:
             for (int i = 0; i < bit_str.length; i++) {
                 if (bit_str[i] == '1') {
                     this.qc.pauli_x(i);
@@ -61,7 +66,7 @@ struct DeutschJozsa {
                 }
             }
             break;
-        case "constant":
+        case FunctionType.Constant:
             int output = f(bit_str);
             if (output == 1) {
                 this.qc.pauli_x(this.num_qubits - 1);
@@ -86,7 +91,7 @@ struct DeutschJozsa {
     *
     * returns: An associative array of binary string of basis state to number of times measured
     */
-    int[string] deutsch_jozsa(int delegate(string) f, string type, int shots = 2000) {
+    int[string] deutsch_jozsa(int delegate(string) f, FunctionType type, int shots = 2000) {
         this.qc.pauli_x(this.num_qubits - 1);
         this.qc.hadamard(this.num_qubits - 1);
 
