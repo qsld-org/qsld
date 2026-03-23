@@ -6,6 +6,8 @@ import std.stdio;
 import std.format;
 import std.complex;
 import std.math;
+import std.range;
+import std.array;
 
 import std.conv : to;
 
@@ -105,7 +107,7 @@ struct DeutschJozsa {
             this.qc.hadamard(i);
         }
 
-        int[string] counts = qc.measure_all(shots);
+        int[string] counts = qc.measure_many(iota(0, this.num_qubits - 1, 1).array, shots);
 
         return counts;
     }

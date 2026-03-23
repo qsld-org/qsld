@@ -1180,6 +1180,35 @@ struct QuantumCircuit {
         }
     }
 
+    // Collapse the state when measuring a subset of qubits
+    private void collapse_many(int[] qubit_idxs, int mask, int result) {
+        int target_sampled = 0;
+
+        foreach (i, idx; qubit_idxs) {
+            int bit = (result >> i) & 1;
+            if (bit == 1) {
+                target_sampled |= (1 << idx);
+            }
+        }
+
+        for (int i = 0; i < (1 << this.num_qubits); i++) {
+            if ((i & mask) != target_sampled) {
+                this.state.elems[i] = Complex!real(0, 0);
+            }
+        }
+
+        real state_norm = 0;
+        foreach (amp; this.state.elems) {
+            state_norm += norm(amp);
+        }
+
+        state_norm = sqrt(state_norm);
+
+        for (int i = 0; i < (1 << this.num_qubits); i++) {
+            this.state.elems[i] = this.state.elems[i] / state_norm;
+        }
+    }
+
     // Collapse the state for all qubit measurement
     private void collapse_all(float outcome_prob, string result) {
         for (int i = 0; i < this.state.length(); i++) {
@@ -1282,6 +1311,117 @@ struct QuantumCircuit {
             string result = measure_internal(qubit_idx, false);
             counts[result] += 1;
         }
+
+        return counts;
+    }
+
+    // measure a subset of qubits out of the entire quantum
+    // register
+    private string measure_many_internal(int[] qubit_idxs, bool do_collapse) {
+        assert(qubit_idxs.length <= this.num_qubits,
+            "The amount of qubit indices specified is too many");
+
+        real[] b_probs = new real[(1 << qubit_idxs.length)];
+        b_probs[] = 0;
+
+        // make mask to identify qubits which need to be the same
+        int mask = 0;
+        foreach (idx; qubit_idxs) {
+            mask |= (1 << idx);
+        }
+
+        for (int b = 0; b < (1 << qubit_idxs.length); b++) {
+            int target = 0;
+
+            // make a target to identify which qubits
+            // need to be the same in b and the state vector
+            // index
+            foreach (i, idx; qubit_idxs) {
+                int bit = (b >> i) & 1;
+                if (bit == 1) {
+                    target |= (1 << idx);
+                }
+            }
+
+            // add probabilities of matching qubits to b probability
+            // array
+            for (int i = 0; i < (1 << this.num_qubits); i++) {
+                if ((i & mask) == target) {
+                    b_probs[b] += norm(this.state.elems[i]);
+                }
+            }
+        }
+
+        auto rng = Random(unpredictableSeed);
+        auto r = uniform(0.0, 1.0f, rng);
+
+        // sample an outcome from the b probabilities
+        int result = 0;
+        real sum = 0;
+        for (int b = 0; b < b_probs.length; b++) {
+            sum += b_probs[b];
+            if (sum > r) {
+                result = b;
+                break;
+            }
+        }
+
+        if (do_collapse) {
+            collapse_many(qubit_idxs, mask, result);
+        }
+
+        return format("%0*b", qubit_idxs.length, result);
+    }
+
+    /** 
+    * Measures a subset of qubits within the entire state
+    *
+    * params:
+    *
+    * qubit_idxs = The indices of the qubits to measure
+    *
+    * do_collapse = A boolean specifying whether or not to collapse the state
+    *
+    * visualize = A boolean specifying whether or not to include measurement
+    *             in the circuit diagram
+    *
+    * returns: A string representing the measured state of the qubits
+    */
+    string measure_many(int[] qubit_idxs, bool do_collapse = false, bool visualize = true) {
+        if (visualize) {
+            update_visualization_arr("M", qubit_idxs);
+        }
+
+        string result = measure_many_internal(qubit_idxs, do_collapse);
+        return result;
+    }
+
+    /**
+    * Overload of the measure_many function to measure the qubits
+    * many times to see the probabilistic outcomes
+    *
+    * params:
+    * qubit_idxs = The indices of the qubits to measure
+    * 
+    * shots = The amount of times to measure the qubits
+    *
+    * visualize = A boolean speicifying whether or not to include measurement in
+    *             the circuit diagram
+    *
+    * returns: A string to int map, representing the state 
+    *          measured and the amount of times it was measured
+    */
+    int[string] measure_many(int[] qubit_idxs, int shots, bool visualize = true) {
+        if (visualize) {
+            update_visualization_arr("M", qubit_idxs);
+        }
+
+        int[string] counts;
+        for (int i = 0; i < shots; i++) {
+            string result = measure_many_internal(qubit_idxs, false);
+            counts[result] += 1;
+        }
+
         return counts;
     }
 
