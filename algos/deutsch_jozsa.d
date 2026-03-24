@@ -38,7 +38,7 @@ struct DeutschJozsa {
 
     /// A balanced function
     int f_balanced(string bit_str) {
-        return bit_str[0];
+        return bit_str[0] - '0';
     }
 
     // Implements the oracle gate which affects the quantum state differently based on
@@ -47,36 +47,26 @@ struct DeutschJozsa {
     // the output will most of the time be all 0 (ideally). If the function is balanced the output
     // should be anything but all 0. 
     private void oracle_gate(int delegate(string) f, FunctionType type) {
-        string bit_str = format("%0*b", this.num_qubits - 1, cast(int) rand() % (
-                1 << (this.num_qubits - 1)));
-
         switch (type) {
         case FunctionType.Balanced:
-            for (int i = 0; i < bit_str.length; i++) {
-                if (bit_str[i] == '1') {
-                    this.qc.pauli_x(i);
-                }
-            }
-
-            for (int i = 0; i < this.num_qubits - 1; i++) {
-                this.qc.cnot(i, this.num_qubits - 1);
-            }
-
-            for (int i = 0; i < bit_str.length; i++) {
-                if (bit_str[i] == '1') {
-                    this.qc.pauli_x(i);
+            for (int i = 0; i < (1 << this.num_qubits); i++) {
+                int x = i & ((1 << (this.num_qubits - 1)) - 1);
+                string bit_str = format("%0*b", this.num_qubits - 1, x);
+                if (f(bit_str) == 1) {
+                    this.qc.state.elems[i] = this.qc.state.elems[i] * -1;
                 }
             }
             break;
         case FunctionType.Constant:
-            int output = f(bit_str);
-            if (output == 1) {
-                this.qc.pauli_x(this.num_qubits - 1);
+            for (int i = 0; i < (1 << (this.num_qubits - 1)); i++) {
+                string bit_str = format("%0*b", this.num_qubits - 1, i);
+                if (f(bit_str) == 1) {
+                    this.qc.pauli_x(this.num_qubits - 1);
+                }
             }
             break;
         default:
-            writeln("invalid function type");
-            break;
+            assert(false, "invalid function type");
         }
     }
 
@@ -107,7 +97,7 @@ struct DeutschJozsa {
             this.qc.hadamard(i);
         }
 
-        int[string] counts = qc.measure_many(iota(0, this.num_qubits - 1, 1).array, shots);
+        int[string] counts = qc.measure_many(iota(0, this.num_qubits - 1).array, shots);
 
         return counts;
     }
