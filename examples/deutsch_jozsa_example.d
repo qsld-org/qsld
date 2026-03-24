@@ -20,7 +20,7 @@ void main() {
     // It is neccessary to provide the type of function that will be used
     // in order to use the right oracle to modify the quantum state based
     // on various factors.
-    int[string] counts = dj.deutsch_jozsa(&dj.f_constant_0, "constant");
+    int[string] counts = dj.deutsch_jozsa(&dj.f_constant_0, FunctionType.Constant);
 
     writeln("Counts for Example 1 (f(x) = 0): ", counts);
 
@@ -32,7 +32,7 @@ void main() {
     DeutschJozsa dj2 = DeutschJozsa(2);
 
     // call the algorithm with a constant function (f(x) = 1)
-    int[string] counts2 = dj2.deutsch_jozsa(&dj2.f_constant_1, "constant");
+    int[string] counts2 = dj2.deutsch_jozsa(&dj2.f_constant_1, FunctionType.Constant);
 
     writeln("Counts for Example 2 (f(x) = 1): ", counts2);
 
@@ -44,7 +44,7 @@ void main() {
     DeutschJozsa dj3 = DeutschJozsa(2);
 
     // call the algorithm on a balanced function
-    int[string] counts3 = dj3.deutsch_jozsa(&dj3.f_balanced, "balanced");
+    int[string] counts3 = dj3.deutsch_jozsa(&dj3.f_balanced, FunctionType.Balanced);
 
     writeln("Counts for Example 3 (balanced): ", counts3);
 
