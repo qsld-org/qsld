@@ -1412,6 +1412,9 @@ struct QuantumCircuit {
     *          measured and the amount of times it was measured
     */
     int[string] measure_many(int[] qubit_idxs, int shots, bool visualize = true) {
+        assert(shots >= 2,
+            "using this overload of the measure function requires shots to be greater than or equal to 2, it is recommended to use over a 1000");
+
         if (visualize) {
             update_visualization_arr("M", qubit_idxs);
         }
