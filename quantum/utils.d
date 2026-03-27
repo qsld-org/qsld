@@ -18,3 +18,8 @@ float state_fidelity(Vector!(Complex!real) sv, Matrix!(Complex!real) dm) {
     real inner_prod = sv_dagger.dot(result).re;
     return inner_prod;
 }
+
+float purity(Matrix!(Complex!real) dm) {
+    Matrix!(Complex!real) dm_squared = dm.mult_mat(dm);
+    return dm_squared.trace();
+}
