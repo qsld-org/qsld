@@ -58,11 +58,9 @@ struct DeutschJozsa {
             }
             break;
         case FunctionType.Constant:
-            for (int i = 0; i < (1 << (this.num_qubits - 1)); i++) {
-                string bit_str = format("%0*b", this.num_qubits - 1, i);
-                if (f(bit_str) == 1) {
-                    this.qc.pauli_x(this.num_qubits - 1);
-                }
+            string bit_str = format("%0*b", this.num_qubits - 1, 0);
+            if (f(bit_str) == 1) {
+                this.qc.pauli_x(this.num_qubits - 1);
             }
             break;
         default:
