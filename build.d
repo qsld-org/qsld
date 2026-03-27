@@ -28,6 +28,7 @@ string[] library_files = [
     "quantum/impure_state/observable.d",
     "quantum/impure_state/decoherence.d",
     "quantum/impure_state/gate_noise.d",
+    "quantum/utils.d",
     "algos/qft.d",
     "algos/deutsch_jozsa.d",
     "algos/grovers.d",
