@@ -88,7 +88,7 @@ struct Visualization {
             int[] qubit_idxs = item[1];
             int timestep = item[2];
 
-            if (!gate_name.startsWith("C") && gate_name != "SWAP" && gate_name != "iSWAP" && gate_name != "TF") {
+            if (!gate_name.startsWith("C") && gate_name != "SWAP" && gate_name != "iSWAP" && gate_name != "TF" && gate_name != "MCZ") {
                 if (gate_name != "M" && gate_name != "MA") {
                     if (gate_name == "R_X" || gate_name == "R_Y" || gate_name == "R_Z") {
                         this.lines[qubit_idxs[0]][this.lines[qubit_idxs[0]].length++] = format(" \\gate{%s(\\theta)} &", gate_name);
@@ -174,6 +174,17 @@ struct Visualization {
                     pad_other_gates(qubit_idxs);
 
                     this.lines[target_qubit][this.lines[target_qubit].length++] = " \\targ{} &";
+                    break;
+                case "MCZ":
+                    int target_qubit = qubit_idxs[qubit_idxs.length - 1];
+
+                    for (int j = 0; j < qubit_idxs.length - 1; j++) {
+                        this.lines[qubit_idxs[j]][this.lines[qubit_idxs[j]].length++] = format(" \\ctrl{%d} &", target_qubit - qubit_idxs[j]);
+                    }
+
+                    pad_other_gates(qubit_idxs);
+
+                    this.lines[target_qubit][this.lines[target_qubit].length++] = " \\gate{Z} &";
                     break;
                 case "SWAP":
                     pad_other_gates(qubit_idxs);

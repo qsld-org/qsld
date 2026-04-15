@@ -831,6 +831,29 @@ struct QuantumCircuit {
     }
 
     /**
+    * The multi controlled-z gate which flips the phase if all qubits are in the |1> state
+    *
+    * params:
+    * target_qubit_idxs = The qubits to check if in the |1> and then flip the phase of the basis state 
+    */
+    void mcz(int[] target_qubit_idxs, bool visualize = true) {
+        if (visualize) {
+            update_visualization_arr("MCZ", target_qubit_idxs);
+        }
+
+        int target_mask = 0;
+        foreach (qubit_idx; target_qubit_idxs) {
+            target_mask |= (1 << qubit_idx);
+        }
+
+        for (int i = 0; i < this.state.elems.length; i++) {
+            if (((i & target_mask) == target_mask)) {
+                this.state.elems[i] = this.state.elems[i] * Complex!real(-1, 0);
+            }
+        }
+    }
+
+    /**
     * The SWAP gate takes two qubits and if their states are different at index i it calculates a
     * new position j to swap the amplitudes of two states.
     *
