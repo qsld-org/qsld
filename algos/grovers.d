@@ -3,12 +3,20 @@ module algos.grovers;
 import std.complex;
 import std.math;
 import std.format;
+import std.range;
+import std.array;
 
 import quantum.pure_state.qc;
+
+enum OperatorType {
+    Normal,
+    Decomposition
+}
 
 struct Grovers {
     int num_qubits;
     QuantumCircuit qc;
+    OperatorType ot;
 
     /**
     * The constructor for the grovers algorithm object
@@ -19,6 +27,13 @@ struct Grovers {
     this(int num_qubits) {
         this.num_qubits = num_qubits;
         this.qc = QuantumCircuit(this.num_qubits);
+        this.ot = OperatorType.Normal;
+    }
+
+    this(int num_qubits, OperatorType ot) {
+        this.num_qubits = num_qubits;
+        this.qc = QuantumCircuit(this.num_qubits);
+        this.ot = ot;
     }
 
     // The grovers algorithm oracle to be used
@@ -26,6 +41,27 @@ struct Grovers {
         for (int i = 0; i < this.qc.state.elems.length; i++) {
             if (f(format("%0*b", this.num_qubits, i)) == 1) {
                 this.qc.state.elems[i] = this.qc.state.elems[i] * Complex!real(-1, 0);
+            }
+        }
+    }
+
+    // The gate decomposiiton of grovers oracle
+    private void oracle_decomp(int function(string) f) {
+        int[] qubit_indices;
+        for (int i = 0; i < this.qc.state.elems.length; i++) {
+            if (f(format("%0*b", this.num_qubits, i)) == 1) {
+                for (int j = 0; j < this.num_qubits; j++) {
+                    if ((i & (1 << j)) == 0) {
+                        this.qc.pauli_x(j);
+                        qubit_indices ~= [j];
+                    }
+                }
+
+                this.qc.mcz(iota(0, this.num_qubits).array);
+
+                foreach (qubit_idx; qubit_indices) {
+                    this.qc.pauli_x(qubit_idx);
+                }
             }
         }
     }
@@ -41,6 +77,27 @@ struct Grovers {
 
         for (int i = 0; i < this.qc.state.elems.length; i++) {
             this.qc.state.elems[i] = 2 * mean - this.qc.state.elems[i];
+        }
+    }
+
+    // The gate decomposition of grovers diffusion operator
+    private void diffusion_decomp() {
+        for (int i = 0; i < this.num_qubits; i++) {
+            this.qc.hadamard(i);
+        }
+
+        for (int i = 0; i < this.num_qubits; i++) {
+            this.qc.pauli_x(i);
+        }
+
+        this.qc.mcz(iota(0, this.num_qubits).array);
+
+        for (int i = 0; i < this.num_qubits; i++) {
+            this.qc.pauli_x(i);
+        }
+
+        for (int i = 0; i < this.num_qubits; i++) {
+            this.qc.hadamard(i);
         }
     }
 
@@ -62,8 +119,18 @@ struct Grovers {
         int num_iterations = cast(int)(pi_over_four * sqrt(cast(real) pow(2, this.num_qubits)));
 
         for (int i = 0; i < num_iterations; i++) {
-            oracle(f);
-            diffusion();
+            switch (this.ot) {
+            case OperatorType.Decomposition:
+                oracle_decomp(f);
+                diffusion_decomp();
+                break;
+            case OperatorType.Normal:
+                oracle(f);
+                diffusion();
+                break;
+            default:
+                assert(false, "Unknown operator type");
+            }
         }
 
         return this.qc.measure_all(shots);
