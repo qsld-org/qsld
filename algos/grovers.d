@@ -30,6 +30,18 @@ struct Grovers {
         this.ot = OperatorType.Normal;
     }
 
+    /**
+    * Constructor overload for grovers algorithm object which allows for specification
+    * of the type of oracle and diffusion operator to be used
+    *
+    * params:
+    * num_qubits = The number of qubits to use in the algorithms internal circuit
+    *
+    * ot = The type of oracle and diffusion operator to be used. Choose between OperatorType.Normal
+    *      and OperatorType.Decomposition, the Normal version does not use gates and is possibly faster 
+    *      than the Decomposition version which uses gates in the implementation of both the oracle and 
+    *      diffusion operator
+    */
     this(int num_qubits, OperatorType ot) {
         this.num_qubits = num_qubits;
         this.qc = QuantumCircuit(this.num_qubits);
@@ -107,6 +119,8 @@ struct Grovers {
     *
     * params:
     * f = The function which encodes the solution to the search
+    *
+    * shots = The amount of times to run measurement on the resulting state
     *
     * returns: An associative array of basis state to number of times measured
     */
