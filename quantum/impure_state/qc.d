@@ -785,6 +785,26 @@ struct QuantumCircuit {
         }
     }
 
+    void mcz(int[] target_qubit_idxs, bool visualize = true) {
+        if (visualize) {
+            update_visualization_arr("MCZ", target_qubit_idxs);
+        }
+
+        int target_mask = 0;
+        foreach (qubit_idx; target_qubit_idxs) {
+            target_mask |= (1 << qubit_idx);
+        }
+
+        for (int i = 0; i < this.density_mat.row_num; i++) {
+            for (int j = 0; j < this.density_mat.col_num; j++) {
+                if (((i & target_mask) == target_mask) != ((j & target_mask) == target_mask)) {
+                    this.density_mat.rows[i].elems[j] = this.density_mat.rows[i].elems[j] * Complex!real(
+                        -1, 0);
+                }
+            }
+        }
+    }
+
     /**
     * The SWAP gate takes two qubits and if their states are different at index i it calculates a
     * new position j to swap the amplitudes of two states.
