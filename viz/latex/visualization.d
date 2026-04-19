@@ -1,4 +1,4 @@
-module viz.visualization;
+module viz.latex.visualization;
 
 import std.stdio;
 import std.typecons;
@@ -87,6 +87,10 @@ struct Visualization {
             string gate_name = item[0];
             int[] qubit_idxs = item[1];
             int timestep = item[2];
+
+            if (gate_name == "BAR") {
+                assert(false, "Barriers are unsupported in latex visualization system");
+            }
 
             if (!gate_name.startsWith("C") && gate_name != "SWAP" && gate_name != "iSWAP" && gate_name != "TF" && gate_name != "MCZ") {
                 if (gate_name != "M" && gate_name != "MA") {
@@ -236,7 +240,7 @@ struct Visualization {
         auto tex_compilation_pid = spawnProcess([compiler, filename], std.stdio.stdin, output_file, output_file);
 
         if (wait(tex_compilation_pid) != 0) {
-            writeln("The compilation of the the latex file with name ", filename, " failed");
+            writeln("The compilation of the latex file with name ", filename, " failed");
             exit(1);
         }
 
