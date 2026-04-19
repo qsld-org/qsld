@@ -16,8 +16,9 @@ QSLD is a quantum simulation library, mainly for my own benefit in learning more
 - `rdmd`
 - `pdflatex` (optional*)
 - `quantikz` (optional*)
+- `typst` (optional*)
 
-`pdflatex` and `quantikz` are optional only if you do not want to draw the circuits you create with this library. Otherwise, at least `quantikz` is an absolute necessity, `pdflatex` can be replaced with another latex compiler.
+`pdflatex` and `quantikz` are optional only if you do not want to draw the circuits you create with this library. Otherwise, at least `quantikz` is an absolute necessity if you do not want to use `typst`, `pdflatex` can be replaced with another latex compiler. `Typst` is the compiler for the markup language by the same name and is also capable of drawing quantum circuits. If you do not want to use `latex` at all for drawing quantum circuits, you can use `typst` instead as an alternative.
 
 ### Building
 
@@ -133,7 +134,11 @@ You can see more simple and complex examples in the `examples/` directory.
 
 ### Drawing The Circuit
 
-In order to draw the circuit above you just add one line to it:
+Their are two main options for how to draw circuits either with `latex` or `typst`. These are both markup languages which can draw quantum circuits well. However, `typst` is a more modern alternative to latex.
+
+#### Latex
+
+In order to draw the circuit above with `latex` you just add one line to it:
 
 ```d
 import std.stdio;
@@ -146,15 +151,36 @@ void main() {
     qc.hadamard(0);
     qc.cnot(0, 1);
     qc.cnot(1, 2);
-    qc.draw();
+    qc.draw_latex();
 
     writeln("Final quantum state: ", qc.state.elems);
 }
 ```
 
-The filename of the generated file is `circuit.pdf`.
+#### Typst
 
-The image generated is:
+In order to draw the circuit above with `typst` rather than `latex` you just change the draw function call.
+
+```d
+import std.stdio;
+import quantum.pure_state.qc;
+
+void main() {
+    QuantumCircuit qc = QuantumCircuit(3);
+
+    // Make a 3 qubit GHZ state
+    qc.hadamard(0);
+    qc.cnot(0, 1);
+    qc.cnot(1, 2);
+    qc.draw_typst();
+
+    writeln("Final quantum state: ", qc.state.elems);
+}
+```
+
+The filename of the generated file for both if unchanged is `circuit.png`.
+
+The image generated for both `latex` and `typst` is:
 
 ![circuit diagram](assets/circuit_example.png)
 
