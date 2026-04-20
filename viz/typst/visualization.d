@@ -59,12 +59,14 @@ struct Visualization {
     */
     void parse_and_write_vis_arr(string filename) {
         append(filename, "#import \"@preview/quill:0.7.2\" as quill: tequila as tq\n");
+        append(filename, "#import \"@preview/physica:0.9.8\" as phys\n");
         append(filename, "#set page(width: auto, height: auto, margin: 0.5cm)\n");
         append(filename, "#quill.quantum-circuit(\n");
 
         for (int i = 0; i < this.num_qubits; i++) {
             int qubit_val = this.initial_state_idx & (1 << i);
-            string qubit_state = format("quill.lstick($|%d⟩$, x: %d, y: %d),\n", (qubit_val >> i), 0, i);
+            string qubit_state = format("quill.lstick(phys.ket($%d$), x: %d, y: %d),\n",
+                (qubit_val >> i), 0, i);
             append(filename, qubit_state);
         }
 
